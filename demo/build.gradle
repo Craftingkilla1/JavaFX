@@ -1,0 +1,22 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+application {
+    mainClassName = 'com.app.MainApp'  // Update this to match your actual package and class name
+    applicationDefaultJvmArgs = [
+        '--add-modules', 'javafx.controls,javafx.fxml'
+    ]
+}   
+
+tasks.named('run') {
+    doFirst {
+        jvmArgs = application.applicationDefaultJvmArgs
+    }
+}
+

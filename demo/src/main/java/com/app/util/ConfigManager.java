@@ -7,7 +7,8 @@ public class ConfigManager {
     public Map<String, Object> loadUserConfig() {
         // Simulate loading user configuration from a file
         Map<String, Object> mockConfig = new HashMap<>();
-        mockConfig.put("displayMotor", "Motor1");
+        mockConfig.put("displayMotor", "Motor1_Speed");
         return mockConfig;
     }
 }
+

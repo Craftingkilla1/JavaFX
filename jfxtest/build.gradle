@@ -1,0 +1,26 @@
+plugins {
+    id 'java'
+    id 'application'
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.openjfx:javafx-controls:17.0.1'
+    implementation 'org.openjfx:javafx-fxml:17.0.1'
+}
+
+application {
+    mainClassName = 'com.app.MainApp'
+}
+
+tasks.named('run') {
+    doFirst {
+        jvmArgs = [
+            '--module-path', project.sourceSets.main.runtimeClasspath.getAsPath(),
+            '--add-modules', 'javafx.controls,javafx.fxml'
+        ]
+    }
+}

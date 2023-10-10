@@ -77,7 +77,7 @@ public class Dashboard {
         XYChart.Series<Number, Number> series = (XYChart.Series<Number, Number>) lineChart.getData().get(0);
         
         // Get the motor to display from userConfig
-        String displayMotor = (String) userConfig.getOrDefault("displayMotor", "Motor1");
+        String displayMotor = (String) userConfig.getOrDefault("displayMotor", "Motor1_Speed");
     
         // Get the latest motor speed
         Number newSpeed = (Number) data.get(displayMotor);
@@ -95,10 +95,10 @@ public class Dashboard {
             // Add new data point to series
             series.getData().add(new XYChart.Data<>(relativeTime, newSpeed));
             
-            // Remove older data to keep the chart manageable
-            //if (series.getData().size() > 100) {
-            //    series.getData().remove(0);
-            //}
+            //Remove older data to keep the chart manageable
+            if (series.getData().size() > 100) {
+                series.getData().remove(0);
+            }
         }
     }    
 }
