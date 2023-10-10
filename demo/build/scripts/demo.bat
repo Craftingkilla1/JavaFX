@@ -68,7 +68,7 @@ goto fail
 :execute
 @rem Setup the command line
 
-set CLASSPATH=%APP_HOME%\lib\demo.jar
+set CLASSPATH=%APP_HOME%\lib\demo.jar;%APP_HOME%\lib\NetworkTables-3.1.7-desktop.jar
 
 
 @rem Execute demo

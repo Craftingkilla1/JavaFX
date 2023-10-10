@@ -7,6 +7,10 @@ repositories {
     mavenCentral()
 }
 
+dependencies {
+    implementation files("./libs/NetworkTables-3.1.7-desktop.jar")
+}
+
 application {
     mainClassName = 'com.app.MainApp'  // Update this to match your actual package and class name
     applicationDefaultJvmArgs = [
