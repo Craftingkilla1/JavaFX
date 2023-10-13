@@ -1,9 +1,0 @@
-Manifest-Version: 1.0
-Main-Class: org.eclipse.jdt.internal.jarinjarloader.JarRsrcLoader
-Rsrc-Class-Path: ./ javafx.base.jar javafx.controls.jar javafx.fxml.jar 
- javafx.graphics.jar javafx.media.jar javafx.swing.jar javafx.web.jar ja
- vafx-swt.jar NetworkTables-3.1.7-desktop.jar cameraserver-java-2020.3.2
- .jar
-Rsrc-Main-Class: application.Main
-Class-Path: .
-

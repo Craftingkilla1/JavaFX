@@ -5,10 +5,18 @@ plugins {
 
 repositories {
     mavenCentral()
+    maven {
+        url "https://frcmaven.wpi.edu:443/artifactory/release"
+    }
+    
 }
 
 dependencies {
-    implementation files("./libs/NetworkTables-3.1.7-desktop.jar")
+    implementation 'edu.wpi.first.ntcore:ntcore-java:2023.4.3'
+    implementation 'edu.wpi.first.wpiutil:wpiutil-java:2023.4.3'
+    implementation 'edu.wpi.first.ntcore:ntcore-jni:2023.4.3:windowsx86-64@jar'
+    implementation 'edu.wpi.first.wpiutil:wpiutil-jni:2023.4.3:windowsx86-64@jar'
+    implementation 'eu.hansolo:Medusa:11.5'
 }
 
 application {
@@ -18,9 +26,18 @@ application {
     ]
 }   
 
-tasks.named('run') {
+task copyDll(type: Copy) {
+    from 'libs'
+    into "$buildDir/libs"
+    include '*.dll'
+}
+
+run {
     doFirst {
-        jvmArgs = application.applicationDefaultJvmArgs
+        jvmArgs = [
+            "-Djava.library.path=$buildDir/libs"
+        ]
     }
+    dependsOn copyDll
 }
 
