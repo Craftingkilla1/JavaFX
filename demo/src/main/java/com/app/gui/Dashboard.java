@@ -10,22 +10,23 @@ import javafx.scene.control.CheckBox;
 import javafx.scene.control.ScrollPane;
 import javafx.scene.control.SplitPane;
 import javafx.scene.control.TextArea;
+import javafx.scene.control.ToggleButton;
 import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
-import javafx.scene.control.ToggleButton;
 import javafx.stage.Stage;
-import javafx.animation.KeyFrame;
-import javafx.animation.Timeline;
-import javafx.util.Duration;
 
 import java.util.HashMap;
 import java.util.Map;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 public class Dashboard {
     private RobotData robotData;
     private TextArea textArea = new TextArea();
     private VBox smartDashboardVBox = new VBox();
+    private VBox checkBoxVBox = new VBox();  // Class-level variable
     private Map<String, CheckBox> createdCheckBoxes = new HashMap<>();
     private Map<String, Gauge> gauges = new HashMap<>();
 
@@ -35,7 +36,6 @@ public class Dashboard {
 
         // Initialize UI
         BorderPane root = new BorderPane();
-        VBox checkBoxVBox = new VBox();
         ScrollPane checkBoxScrollPane = new ScrollPane(checkBoxVBox);
 
         // Create SplitPane and add TextArea and VBox for gauges
@@ -52,29 +52,18 @@ public class Dashboard {
         primaryStage.setFullScreen(true);
         primaryStage.show();
 
-        // Initialize Timeline to fetch and display data
-        Timeline timeline = new Timeline(
-            new KeyFrame(
-                Duration.seconds(0.02),
-                event -> {
-                    // Fetch data in a separate thread
-                    new Thread(() -> {
-                        Map<String, Object> data = robotData.fetchData();
-                        // Update UI on JavaFX Application Thread
-                        Platform.runLater(() -> {
-                            updateCheckBoxes(data, checkBoxVBox);
-                            updateSmartDashboard(data);
-                        });
-                    }).start();
-                }
-            )
-        );
-        timeline.setCycleCount(Timeline.INDEFINITE);
-        timeline.play();
+        ScheduledExecutorService executor = Executors.newSingleThreadScheduledExecutor();
+        executor.scheduleAtFixedRate(() -> {
+            Map<String, Object> data = robotData.fetchData();
+            Platform.runLater(() -> {
+                updateCheckBoxes(data);
+                updateSmartDashboard(data);
+            });
+        }, 0, 20, TimeUnit.MILLISECONDS);
     }
 
-    private void updateCheckBoxes(Map<String, Object> data, VBox checkBoxVBox) {
-        // Existing functionality
+    private void updateCheckBoxes(Map<String, Object> data) {
+
         for (String key : data.keySet()) {
             String rootTable = key.split("/")[0];
             if (!createdCheckBoxes.containsKey(rootTable)) {
@@ -88,62 +77,46 @@ public class Dashboard {
 
     private void updateSmartDashboard(Map<String, Object> data) {
         GridPane gridPane = new GridPane();
-
-        ToggleButton button = new ToggleButton("Turn");
-        button.setSelected(false);
-        button.setOnAction(e -> {
-
-            System.out.println("onAction");
-            if (robotData.getBooleanValue("Turn")) {
-                robotData.setBooleanValue("Turn", false);
-                System.out.println("false");
-            }
-            else {
-                robotData.setBooleanValue("Turn", true);
-                System.out.println("true");
-            }
-
-        });
-        gridPane.add(button, 0, 0);
-
-
-        int row = 0, col = 1;
+        int row = 0, col = 0;
         StringBuilder textOutput = new StringBuilder();
     
+        // Handle Buttons and Gauges
         for (Map.Entry<String, Object> entry : data.entrySet()) {
             String key = entry.getKey();
+            Object value = entry.getValue();
+            String shortKey = key.replace("SmartDashboard/", "");
+            FRCConfig.UIType uiType = FRCConfig.getUIType(shortKey);
+            
             String rootTable = key.split("/")[0];
             CheckBox checkBox = createdCheckBoxes.get(rootTable);
     
             if (checkBox != null && checkBox.isSelected()) {
-                textOutput.append(key).append(": ").append(entry.getValue()).append("\n");
+                textOutput.append(key).append(": ").append(value).append("\n");
     
-                if (key.startsWith("SmartDashboard/")) {
-                    Object value = entry.getValue();
-                    String shortKey = key.replace("SmartDashboard/", "");
-                    FRCConfig.UIType uiType = FRCConfig.getUIType(shortKey);
+                if (uiType == FRCConfig.UIType.BUTTON) {
+                    ToggleButton button = new ToggleButton(shortKey);
+                    button.setSelected(robotData.getBooleanValue(shortKey));
+                    button.setOnAction(e -> {
+                        boolean currentValue = robotData.getBooleanValue(shortKey);
+                        robotData.setBooleanValue(shortKey, !currentValue);
+                        System.out.println("Toggled " + shortKey + " to: " + !currentValue);  // Debug
+                    });
+                    gridPane.add(button, col, row);
+                } else if (uiType == FRCConfig.UIType.GAUGE && value instanceof Number) {
+                    FRCConfig.GaugeConfig config = FRCConfig.getConfig(shortKey);
+                    Gauge gauge = gauges.getOrDefault(key, GaugeBuilder.create().title(shortKey).build());
+                    gauge.setMinValue(config.minValue);
+                    gauge.setMaxValue(config.maxValue);
+                    gauge.setUnit(config.unit);
+                    gauge.setValue(((Number) value).doubleValue());
+                    gauges.put(key, gauge);
+                    gridPane.add(gauge, col, row);
+                }
     
-                    if (uiType == FRCConfig.UIType.GAUGE && value instanceof Number) {
-                        FRCConfig.GaugeConfig config = FRCConfig.getConfig(shortKey);
-                        Gauge gauge = gauges.getOrDefault(key, GaugeBuilder.create().title(shortKey).build());
-                        gauge.setPrefSize(200, 200);
-                        gauge.setMinValue(config.minValue);
-                        gauge.setMaxValue(config.maxValue);
-                        gauge.setUnit(config.unit);
-                        gauge.setValue(((Number) value).doubleValue());
-                        gauges.put(key, gauge);
-                        gridPane.add(gauge, col, row);
-                    
-                    }
-                
-                    
-
-                    col++;
-                    if (col > 3) {  // Adjust based on your layout
-                        col = 0;
-                        row++;
-                    }
-                    
+                col++;
+                if (col > 3) {  // Reset column and increment row after every 4th element
+                    col = 0;
+                    row++;
                 }
             }
         }
@@ -151,5 +124,5 @@ public class Dashboard {
         textArea.setText(textOutput.toString());
         smartDashboardVBox.getChildren().clear();
         smartDashboardVBox.getChildren().add(gridPane);
-    }   
+    }    
 }

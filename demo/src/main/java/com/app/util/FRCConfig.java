@@ -61,7 +61,7 @@ public class FRCConfig {
         // ... (other configurations)
 
         // Buttons
-        UI_TYPE_MAP.put("SmartDashboard/Turn", UIType.BUTTON);
+        UI_TYPE_MAP.put("Turn", UIType.BUTTON);  // Added "Turn" as a button
 
         // Add more configurations here
     }
@@ -74,7 +74,6 @@ public class FRCConfig {
     public static GaugeConfig getConfig(String key) {
         return frcConfigMap.get(key);
     }
-
 
     /**
      * Retrieve the UIType for a given key.

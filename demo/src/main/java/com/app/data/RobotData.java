@@ -1,5 +1,6 @@
 package com.app.data;
 
+import com.app.util.FRCConfig;
 import edu.wpi.first.networktables.NetworkTable;
 import edu.wpi.first.networktables.NetworkTableInstance;
 
@@ -15,6 +16,14 @@ public class RobotData {
         ntInstance.setServer(ipAddress, port);
         ntInstance.startClient3("Riley");
         dynamicDataMap = new LinkedHashMap<>();
+
+        // Initialize keys based on FRCConfig
+        NetworkTable table = ntInstance.getTable("SmartDashboard");
+        for (String key : FRCConfig.UI_TYPE_MAP.keySet()) {
+            if (FRCConfig.UI_TYPE_MAP.get(key) == FRCConfig.UIType.BUTTON) {
+                table.getEntry(key).setBoolean(false);
+            }
+        }
     }
 
     public Map<String, Object> fetchData() {
@@ -22,7 +31,7 @@ public class RobotData {
         updateTableData(ntInstance.getTable(""), "");
         return new LinkedHashMap<>(dynamicDataMap);
     }
-    
+
     public void setBooleanValue(String key, boolean value) {
         NetworkTable table = ntInstance.getTable("SmartDashboard");
         table.getEntry(key).setBoolean(value);
